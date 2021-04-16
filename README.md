@@ -3,7 +3,7 @@ Official codes of CVPR21 paper: Learning Normal Dynamics in Videos with Meta Pro
 
 If you find this work helpful, please cite:
 ```
-@inproceedings{adgcn_cvpr19,
+@inproceedings{Lv2021MPN,
   author    = {Hui LV and
 	       Chen Chen and
                Zhen Cui and
