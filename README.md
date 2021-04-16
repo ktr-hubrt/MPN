@@ -5,7 +5,7 @@ If you find this work helpful, please cite:
 ```
 @inproceedings{adgcn_cvpr19,
   author    = {Hui LV and
-	             Chen Chen and
+	       Chen Chen and
                Zhen Cui and
                Chunyan Xu and
                Yong Li and
