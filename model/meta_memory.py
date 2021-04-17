@@ -150,16 +150,14 @@ class Meta_Memory(nn.Module):
                 # normalize
                 multi_heads_weights = F.normalize(multi_heads_weights, p=1, dim=1)
 
-            # import pdb;pdb.set_trace()
+            
             key = key.reshape((batch_size,w*h,dims))
             mems = multi_heads_weights*key.unsqueeze(-2)
             mems = mems.sum(1)
-            
-            # mems = F.normalize(mems, dim=-1)
-            # import pdb;pdb.set_trace()
+
             # losses
             updated_query, fea_loss, cst_loss, dis_loss = self.query_loss(query, mems, weights, train)
-            # import pdb;pdb.set_trace()
+            
             # skip connection
             updated_query = updated_query+query
 
@@ -180,28 +178,19 @@ class Meta_Memory(nn.Module):
             # softmax on weights
             multi_heads_weights = F.softmax(multi_heads_weights,dim=1)
             
-            # import pdb;pdb.set_trace()
             # hard_shrink
             if self.shrink_thres>0:
                 multi_heads_weights = hard_shrink_relu(multi_heads_weights, lambd=self.shrink_thres)
                 # normalize
                 multi_heads_weights = F.normalize(multi_heads_weights, p=1, dim=1)
-
-            # heatmap(multi_heads_weights)
-            # import pdb;pdb.set_trace()
+                
             key = key.reshape((batch_size,w*h,dims))
             mems = multi_heads_weights*key.unsqueeze(-2)
             mems = mems.sum(1)
-            # mems = self.Dim_reduction(mems)
-            # heatmap(norm.unsqueeze(-1))
-            
-            # normlize
-            # query = F.normalize(query, dim=-1)
-            # mems = F.normalize(mems, dim=-1)
 
             # loss
             updated_query, fea_loss, query, softmax_score_query, softmax_score_memory = self.query_loss(query, mems, weights, train)
-            # import pdb;pdb.set_trace()
+
             # skip connection
             updated_query = updated_query+query
             # reshape
@@ -229,31 +218,12 @@ class Meta_Memory(nn.Module):
 
             # Normal constrain
             loss_mse = torch.nn.MSELoss()
-            # Dim reduction
-            # if weights == None:
-            #     keys = self.Dim_reduction(keys)
-            # else:
-            #     keys = linear(keys, weights['memory.Dim_reduction.weight'], weights['memory.Dim_reduction.bias'])
             keys = F.normalize(keys, dim=-1)
             _, softmax_score_memory = self.get_score(keys, query)
-            # import pdb;pdb.set_trace()
-            # hard_shrink
-            # if self.shrink_thres>0:
-            #     att_weight = hard_shrink_relu(softmax_score_memory, lambd=self.shrink_thres)
-            #     # normalize
-            #     att_weight = F.normalize(att_weight, p=1, dim=-1)
-            # else:
-            #      att_weight = softmax_score_memory
 
             new_query = softmax_score_memory.unsqueeze(-1)*keys.unsqueeze(1)
             new_query = new_query.sum(2)
             new_query = F.normalize(new_query, dim=-1)
-            # reconstrcut feature vectors
-            # fea_loss = loss_mse(query, new_query)
-            # fea_loss = mean_distance(query, new_query, None, train)
-            # import pdb;pdb.set_trace()
-
-            
 
             # import pdb;pdb.set_trace()
             # maintain the distinction among attribute vectors
@@ -261,67 +231,26 @@ class Meta_Memory(nn.Module):
         
             # 1st, 2nd closest memories
             pos = torch.gather(keys,1,gathering_indices[:,:,:1].repeat((1,1,dims)))
-            # neg = torch.gather(keys,1,gathering_indices[:,:,1:2].repeat((1,1,dims)))
-            # dis_loss = loss_dis(query, pos, neg)
-            # import pdb;pdb.set_trace()
             fea_loss = loss_mse(query, pos)
 
-            
-            # import pdb;pdb.set_trace()
             return new_query, fea_loss, cst_loss, dis_loss
         
             
         else:
             loss_mse = torch.nn.MSELoss(reduction='none')
-            # if weights == None:
-            #     keys = self.Dim_reduction(keys)
-            # else:
-            #     keys = linear(keys, weights['memory.Dim_reduction.weight'], weights['memory.Dim_reduction.bias'])
             keys = F.normalize(keys, dim=-1)
             softmax_score_query, softmax_score_memory = self.get_score(keys, query)
-                
-            # hard_shrink
-            # if self.shrink_thres>0:
-            #     att_weight = hard_shrink_relu(softmax_score_memory, lambd=self.shrink_thres)
-            #     # normalize
-            #     att_weight = F.normalize(att_weight, p=1, dim=-1)
-            # else:
-            #     att_weight = softmax_score_memory
-
+            
             new_query = softmax_score_memory.unsqueeze(-1)*keys.unsqueeze(1)
             new_query = new_query.sum(2)
             new_query = F.normalize(new_query, dim=-1)
-            # import pdb;pdb.set_trace()
-            # fea_loss = loss_mse(query, new_query)
-            # fea_loss = mean_distance(query, new_query, None, train)
-            # n_query = query.mean(1,keepdim=True)
-            # fea_loss = sum_distance(query, n_query)
-            # fea_loss = torch.var(fea_loss,-1)
-            # import pdb;pdb.set_trace()
-            # query_repeat = query.unsqueeze(-2).repeat((1,1,keys.shape[1],1))
-            # keys_repeat = keys.unsqueeze(1).repeat((1,query.shape[1],1,1))
-            
-            # import pdb;pdb.set_trace()
-            # pq = torch.bmm(query, new_query.permute(0,2,1))
+
             _, gathering_indices = torch.topk(softmax_score_memory, 2, dim=-1)
         
-            # # 1st, 2nd closest memories
+            # 1st, 2nd closest memories
             pos = torch.gather(keys,1,gathering_indices[:,:,:1].repeat((1,1,dims)))
-            # neg = torch.gather(keys,1,gathering_indices[:,:,1:2].repeat((1,1,dims)))
-            # import pdb;pdb.set_trace()
-            # fea_loss = mean_distance(query, pos, training=train)
             fea_loss = loss_mse(query, pos)
-            # fea_loss = torch.topk(fea_loss, 4, dim=-1, largest=False)[0].mean()
-            # dis_loss = loss_dis(query, pos, neg)
-            # similarity = torch.bmm(keys, keys.permute(0,2,1))
-            # dis = 1-distance(keys.unsqueeze(1), keys.unsqueeze(2))
-            
-            # mask = dis>0
-            # dis *= mask.float()
-            # dis = torch.triu(dis, diagonal=1)
-            # dis_loss = dis.sum(1).sum(1)*2/(self.memory_size*(self.memory_size-1))
-            # dis_loss = dis_loss.mean()
-            # import pdb;pdb.set_trace()
+
             return new_query, fea_loss, query, softmax_score_query, softmax_score_memory
     
     
