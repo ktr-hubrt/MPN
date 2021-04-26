@@ -5,13 +5,13 @@ Official codes of CVPR21 paper: Learning Normal Dynamics in Videos with Meta Pro
 Please download the corresponding benchmarks in 'data' directory. Then prepare the environment as in requirement.txt.
 
 # Unsupervised Anomaly Detection Model Training
-Run: python Train.py to train a model with DPU model.
+Run 'python Train.py' to train a model with DPU model.
 
 # Meta-learning Anomaly Detection Model Training
-Run: python Train_meta.py to train a model with MPU model.
+Run 'python Train_meta.py' to train a model with MPU model.
 
 # Meta-learning Anomaly Detection Model Testing
-Run: python Test_meta.py to train a model with MPU model.
+Run 'python Test_meta.py' to train a model with MPU model.
 
 If you find this work helpful, please cite:
 ```
