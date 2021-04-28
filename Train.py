@@ -42,13 +42,12 @@ parser.add_argument('--loss_distinguish', type=float, default=0.0001, help='weig
 parser.add_argument('--h', type=int, default=256, help='height of input images')
 parser.add_argument('--w', type=int, default=256, help='width of input images')
 parser.add_argument('--c', type=int, default=3, help='channel of input images')
-parser.add_argument('--lr_D', type=float, default=1e-4, help='initial learning rate for decoder and ohead')
-parser.add_argument('--lr_P', type=float, default=1e-4, help='initial learning rate for prototype learning')
+parser.add_argument('--lr_D', type=float, default=1e-4, help='initial learning rate for parameters')
 parser.add_argument('--t_length', type=int, default=5, help='length of the frame sequences')
 parser.add_argument('--segs', type=int, default=32, help='num of video segments')
 parser.add_argument('--fdim', type=list, default=[128], help='channel dimension of the features')
-parser.add_argument('--mdim', type=list, default=[128], help='channel dimension of the memory items')
-parser.add_argument('--msize', type=int, default=10, help='number of the memory items')
+parser.add_argument('--pdim', type=list, default=[128], help='channel dimension of the prototypes')
+parser.add_argument('--psize', type=int, default=10, help='number of the prototype items')
 parser.add_argument('--alpha', type=float, default=0.6, help='weight for the anomality score')
 parser.add_argument('--num_workers', type=int, default=8, help='number of workers for the train loader')
 parser.add_argument('--num_workers_test', type=int, default=8, help='number of workers for the test loader')
@@ -84,7 +83,7 @@ train_batch = data.DataLoader(train_dataset, batch_size=args.batch_size, shuffle
 
 
 # Model setting
-model = convAE(args.c, args.t_length, args.msize, args.fdim[0], args.mdim[0])
+model = convAE(args.c, args.t_length, args.psize, args.fdim[0], args.pdim[0])
 model.cuda()
 
 params_encoder =  list(model.encoder.parameters())
