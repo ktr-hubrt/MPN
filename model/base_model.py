@@ -6,7 +6,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 from collections import OrderedDict
-from .meta_memory import *
+from .meta_prototype import *
 from .layers import *
 import pdb
 
@@ -126,7 +126,7 @@ class convAE(torch.nn.Module):
 
         self.encoder = Encoder(t_length, n_channel)
         self.decoder = Decoder_new(t_length, n_channel)
-        self.memory = Meta_Memory(proto_size, feature_dim, key_dim, temp_update, temp_gather)
+        self.prototype = Meta_Prototype(proto_size, feature_dim, key_dim, temp_update, temp_gather)
         # output_head
         self.ohead = Outhead(128,n_channel,64)
 
@@ -164,7 +164,7 @@ class convAE(torch.nn.Module):
         new_fea = F.normalize(new_fea, dim=1)
         
         if train:
-            updated_fea, keys, fea_loss, cst_loss, dis_loss = self.memory(new_fea, new_fea, weights, train)
+            updated_fea, keys, fea_loss, cst_loss, dis_loss = self.prototype(new_fea, new_fea, weights, train)
             if weights == None:
                 output = self.ohead(updated_fea)
             else:
@@ -179,7 +179,7 @@ class convAE(torch.nn.Module):
         
         #test
         else:
-            updated_fea, keys, softmax_score_query, softmax_score_memory, query, fea_loss = self.memory(new_fea, new_fea, weights, train)
+            updated_fea, keys, softmax_score_query, softmax_score_memory, query, fea_loss = self.prototype(new_fea, new_fea, weights, train)
             if weights == None:
                 output = self.ohead(updated_fea)
             else:
