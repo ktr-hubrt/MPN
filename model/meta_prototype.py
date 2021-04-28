@@ -138,7 +138,7 @@ class Meta_Prototype(nn.Module):
             mask = dis>0
             dis *= mask.float()
             dis = torch.triu(dis, diagonal=1)
-            dis_loss = dis.sum(1).sum(1)*2/(self.memory_size*(self.memory_size-1))
+            dis_loss = dis.sum(1).sum(1)*2/(self.proto_size*(self.proto_size-1))
             dis_loss = dis_loss.mean()
 
             # maintain the consistance of same attribute vector
