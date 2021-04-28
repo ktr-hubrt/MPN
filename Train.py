@@ -37,7 +37,7 @@ parser.add_argument('--batch_size', type=int, default=4, help='batch size for tr
 parser.add_argument('--test_batch_size', type=int, default=1, help='batch size for test')
 parser.add_argument('--epochs', type=int, default=1000, help='number of epochs for training')
 parser.add_argument('--loss_fra_reconstruct', type=float, default=1.00, help='weight of the frame reconstruction loss')
-parser.add_argument('--loss_fea_reconstruct', type=float, default=1.0, help='weight of the feature reconstruction loss')
+parser.add_argument('--loss_fea_reconstruct', type=float, default=1.00, help='weight of the feature reconstruction loss')
 parser.add_argument('--loss_distinguish', type=float, default=0.0001, help='weight of the feature distinction loss')
 parser.add_argument('--h', type=int, default=256, help='height of input images')
 parser.add_argument('--w', type=int, default=256, help='width of input images')
@@ -52,9 +52,9 @@ parser.add_argument('--alpha', type=float, default=0.6, help='weight for the ano
 parser.add_argument('--num_workers', type=int, default=8, help='number of workers for the train loader')
 parser.add_argument('--num_workers_test', type=int, default=8, help='number of workers for the test loader')
 parser.add_argument('--dataset_type', type=str, default='ped2', help='type of dataset: ped2, avenue, shanghai')
-parser.add_argument('--dataset_path', type=str, default='../ano_pred_cvpr2018/data/', help='directory of data')
+parser.add_argument('--dataset_path', type=str, default='.data/', help='directory of data')
 parser.add_argument('--exp_dir', type=str, default='log', help='directory of log')
-parser.add_argument('--resume', type=str, default='exp/ped2/ped2_p10_ss/model_2.pth', help='file path of resume pth')
+parser.add_argument('--resume', type=str, default='exp/ped2/example.pth', help='file path of resume pth')
 parser.add_argument('--debug', type=bool, default=False, help='if debug')
 args = parser.parse_args()
 
@@ -128,12 +128,6 @@ loss_dis = AverageMeter()
 
 
 model.train()
-if len(args.gpus[0])>1:
-  model.module.encoder.eval()
-  model.module.decoder.eval()
-else:
-  model.encoder.eval()
-  model.decoder.eval()
 
 for epoch in range(start_epoch, args.epochs):
     labels_list = []
@@ -182,12 +176,13 @@ for epoch in range(start_epoch, args.epochs):
     loss_dis.reset()
 
     # Save the model
-    if epoch%10==0:
+    if epoch%100==0:
       
       if len(args.gpus[0])>1:
         model_save = model.module
       else:
         model_save = model
+        
       state = {
             'epoch': epoch,
             'state_dict': model_save,
@@ -200,6 +195,3 @@ print('Training is finished')
 if not args.debug:
   sys.stdout = orig_stdout
   f.close()
-
-
-
