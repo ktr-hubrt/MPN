@@ -38,20 +38,19 @@ parser.add_argument('--batch_size', type=int, default=1, help='batch size for tr
 parser.add_argument('--test_batch_size', type=int, default=1, help='batch size for test')
 parser.add_argument('--loss_fra_reconstruct', type=float, default=1.00, help='weight of the frame reconstruction loss')
 parser.add_argument('--loss_fea_reconstruct', type=float, default=1.00, help='weight of the feature reconstruction loss')
-parser.add_argument('--loss_consist', type=float, default=0.00, help='weight of the feature consistance loss')
-parser.add_argument('--loss_distinguish', type=float, default=0.00, help='weight of the feature distinction loss')
+parser.add_argument('--loss_distinguish', type=float, default=0.0001, help='weight of the feature distinction loss')
 parser.add_argument('--h', type=int, default=256, help='height of input images')
 parser.add_argument('--w', type=int, default=256, help='width of input images')
 parser.add_argument('--c', type=int, default=3, help='channel of input images')
 parser.add_argument('--t_length', type=int, default=5, help='length of the frame sequences')
 parser.add_argument('--fdim', type=int, default=128, help='channel dimension of the features')
-parser.add_argument('--mdim', type=int, default=128, help='channel dimension of the memory items')
-parser.add_argument('--msize', type=int, default=10, help='number of the memory items')
+parser.add_argument('--pdim', type=int, default=128, help='channel dimension of the prototypes')
+parser.add_argument('--psize', type=int, default=10, help='number of the prototypes')
 parser.add_argument('--alpha', type=float, default=0.5, help='weight for the anomality score')
 parser.add_argument('--num_workers', type=int, default=8, help='number of workers for the train loader')
 parser.add_argument('--num_workers_test', type=int, default=8, help='number of workers for the test loader')
 parser.add_argument('--dataset_type', type=str, default='ped2', help='type of dataset: ped2, avenue, shanghai')
-parser.add_argument('--dataset_path', type=str, default='data/', help='directory of data')
+parser.add_argument('--dataset_path', type=str, default='.data/', help='directory of data')
 parser.add_argument('--exp_dir', type=str, default='log', help='directory of log')
 parser.add_argument('--resume', type=str, default='exp/pretrain_model.pth', help='file path of resume pth')
 parser.add_argument('--debug', type=bool, default=False, help='if debug')
@@ -90,9 +89,8 @@ train_batch = data.DataLoader(train_dataset, batch_size = args.batch_size,
 
 
 # Model setting
-model = convAE(args.c, args.t_length, args.msize, args.fdim, args.mdim)
+model = convAE(args.c, args.t_length, args.psize, args.fdim, args.pdim)
 model.cuda()
-
 
 
 if len(args.gpus[0])>1:
@@ -209,7 +207,6 @@ for epoch in range(start_epoch, args.meta_epoch):
 
     loss_raw.reset()
     loss_lh.reset()
-    
 
 
     # Save the model and the memory items
