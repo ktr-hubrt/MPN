@@ -88,10 +88,10 @@ model.cuda()
 
 params_encoder =  list(model.encoder.parameters())
 params_decoder = list(model.decoder.parameters())
-params_memory = list(model.memory.parameters())
+params_proto = list(model.prototype.parameters())
 params_output = list(model.ohead.parameters())
 # params = list(model.memory.parameters())
-params_D =  params_encoder+params_decoder+params_output+params_memory
+params_D =  params_encoder+params_decoder+params_output+params_proto
 
 optimizer_D = torch.optim.Adam(params_D, lr=args.lr_D)
 
