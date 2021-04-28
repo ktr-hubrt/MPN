@@ -109,7 +109,7 @@ class Decoder_new(torch.nn.Module):
         return cat2
 
 class convAE(torch.nn.Module):
-    def __init__(self, n_channel=3,  t_length=5, memory_size=10, feature_dim=512, key_dim=512, temp_update=0.1, temp_gather=0.1):
+    def __init__(self, n_channel=3,  t_length=5, proto_size=10, feature_dim=512, key_dim=512, temp_update=0.1, temp_gather=0.1):
         super(convAE, self).__init__()
 
         def Outhead(intInput, intOutput, nc):
@@ -126,7 +126,7 @@ class convAE(torch.nn.Module):
 
         self.encoder = Encoder(t_length, n_channel)
         self.decoder = Decoder_new(t_length, n_channel)
-        self.memory = Meta_Memory(memory_size, feature_dim, key_dim, temp_update, temp_gather)
+        self.memory = Meta_Memory(proto_size, feature_dim, key_dim, temp_update, temp_gather)
         # output_head
         self.ohead = Outhead(128,n_channel,64)
 
@@ -152,65 +152,6 @@ class convAE(torch.nn.Module):
                 # print(k)
                 params[k] = p
         return params
-
-    def encoder_w(self, inp, weights):
-        x = conv2d(inp, weights['encoder.moduleConv1.0.weight'], weights['encoder.moduleConv1.0.bias'], stride=1, padding=1)
-        x = relu(x)
-        x = conv2d(x, weights['encoder.moduleConv1.2.weight'], weights['encoder.moduleConv1.2.bias'], stride=1, padding=1)
-        x = relu(x)
-        conv1 = x
-        x = maxpool(x,2,2)
-
-        x = conv2d(x, weights['encoder.moduleConv2.0.weight'], weights['encoder.moduleConv2.0.bias'], stride=1, padding=1)
-        x = relu(x)
-        x = conv2d(x, weights['encoder.moduleConv2.2.weight'], weights['encoder.moduleConv2.2.bias'], stride=1, padding=1)
-        x = relu(x)
-        conv2 = x
-        x = maxpool(x,2,2)
-
-        x = conv2d(x, weights['encoder.moduleConv3.0.weight'], weights['encoder.moduleConv3.0.bias'], stride=1, padding=1)
-        x = relu(x)
-        x = conv2d(x, weights['encoder.moduleConv3.2.weight'], weights['encoder.moduleConv3.2.bias'], stride=1, padding=1)
-        x = relu(x)
-        conv3 = x
-        x = maxpool(x,2,2)
-
-        x = conv2d(x, weights['encoder.moduleConv4.0.weight'], weights['encoder.moduleConv4.0.bias'], stride=1, padding=1)
-        x = relu(x)
-        x = conv2d(x, weights['encoder.moduleConv4.2.weight'], weights['encoder.moduleConv4.2.bias'], stride=1, padding=1)
-        x = relu(x)
-
-        return x, conv1, conv2, conv3
-
-    def decoder_w(self, inp, skip1, skip2, skip3, weights):
-        x = conv2d(inp, weights['decoder.moduleConv.0.weight'], weights['decoder.moduleConv.0.bias'], stride=1, padding=1)
-        x = relu(x)
-        x = conv2d(x, weights['decoder.moduleConv.2.weight'], weights['decoder.moduleConv.2.bias'], stride=1, padding=1)
-        x = relu(x)
-
-        x = conv_transpose2d(x, weights['decoder.moduleUpsample4.0.weight'], weights['decoder.moduleUpsample4.0.bias'], stride=2, padding=1)
-        x = relu(x)
-        x = torch.cat((skip3, x), dim = 1)
-
-        x = conv2d(x, weights['decoder.moduleDeconv3.0.weight'], weights['decoder.moduleDeconv3.0.bias'], stride=1, padding=1)
-        x = relu(x)
-        x = conv2d(x, weights['decoder.moduleDeconv3.2.weight'], weights['decoder.moduleDeconv3.2.bias'], stride=1, padding=1)
-        x = relu(x)
-
-        x = conv_transpose2d(x, weights['decoder.moduleUpsample3.0.weight'], weights['decoder.moduleUpsample3.0.bias'], stride=2, padding=1)
-        x = relu(x)
-        x = torch.cat((skip2, x), dim = 1)
-
-        x = conv2d(x, weights['decoder.moduleDeconv2.0.weight'], weights['decoder.moduleDeconv2.0.bias'], stride=1, padding=1)
-        x = relu(x)
-        x = conv2d(x, weights['decoder.moduleDeconv2.2.weight'], weights['decoder.moduleDeconv2.2.bias'], stride=1, padding=1)
-        x = relu(x)
-
-        x = conv_transpose2d(x, weights['decoder.moduleUpsample2.0.weight'], weights['decoder.moduleUpsample2.0.bias'], stride=2, padding=1)
-        x = relu(x)
-        x = torch.cat((skip1, x), dim = 1)
-
-        return x
 
     def forward(self, x, weights=None, train=True):
         if weights == None:
