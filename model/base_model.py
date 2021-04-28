@@ -17,17 +17,14 @@ class Encoder(torch.nn.Module):
         def Basic(intInput, intOutput):
             return torch.nn.Sequential(
                 torch.nn.Conv2d(in_channels=intInput, out_channels=intOutput, kernel_size=3, stride=1, padding=1),
-                # torch.nn.BatchNorm2d(intOutput),
                 torch.nn.ReLU(inplace=False),
                 torch.nn.Conv2d(in_channels=intOutput, out_channels=intOutput, kernel_size=3, stride=1, padding=1),
-                # torch.nn.BatchNorm2d(intOutput),
                 torch.nn.ReLU(inplace=False)
             )
         
         def Basic_(intInput, intOutput):
             return torch.nn.Sequential(
                 torch.nn.Conv2d(in_channels=intInput, out_channels=intOutput, kernel_size=3, stride=1, padding=1),
-                # torch.nn.BatchNorm2d(intOutput),
                 torch.nn.ReLU(inplace=False),
                 torch.nn.Conv2d(in_channels=intOutput, out_channels=intOutput, kernel_size=3, stride=1, padding=1),
             )
@@ -42,8 +39,6 @@ class Encoder(torch.nn.Module):
         self.modulePool3 = torch.nn.MaxPool2d(kernel_size=2, stride=2)
 
         self.moduleConv4 = Basic_(256, 512)
-        # self.moduleBatchNorm = torch.nn.BatchNorm2d(512)
-        self.moduleReLU = torch.nn.ReLU(inplace=False)
         
     def forward(self, x):
 
@@ -67,10 +62,8 @@ class Decoder_new(torch.nn.Module):
         def Basic(intInput, intOutput):
             return torch.nn.Sequential(
                 torch.nn.Conv2d(in_channels=intInput, out_channels=intOutput, kernel_size=3, stride=1, padding=1),
-                # torch.nn.BatchNorm2d(intOutput),
                 torch.nn.ReLU(inplace=False),
                 torch.nn.Conv2d(in_channels=intOutput, out_channels=intOutput, kernel_size=3, stride=1, padding=1),
-                # torch.nn.BatchNorm2d(intOutput),
                 torch.nn.ReLU(inplace=False)
             )
                 
@@ -78,7 +71,6 @@ class Decoder_new(torch.nn.Module):
         def Upsample(nc, intOutput):
             return torch.nn.Sequential(
                 torch.nn.ConvTranspose2d(in_channels = nc, out_channels=intOutput, kernel_size = 3, stride = 2, padding = 1, output_padding = 1),
-                # torch.nn.BatchNorm2d(intOutput),
                 torch.nn.ReLU(inplace=False)
             )
       
@@ -115,10 +107,8 @@ class convAE(torch.nn.Module):
         def Outhead(intInput, intOutput, nc):
             return torch.nn.Sequential(
                 torch.nn.Conv2d(in_channels=intInput, out_channels=nc, kernel_size=3, stride=1, padding=1),
-                # torch.nn.BatchNorm2d(nc),
                 torch.nn.ReLU(inplace=False),
                 torch.nn.Conv2d(in_channels=nc, out_channels=nc, kernel_size=3, stride=1, padding=1),
-                # torch.nn.BatchNorm2d(nc),
                 torch.nn.ReLU(inplace=False),
                 torch.nn.Conv2d(in_channels=nc, out_channels=intOutput, kernel_size=3, stride=1, padding=1),
                 torch.nn.Tanh()
@@ -228,12 +218,10 @@ def train_init(model, model_weights, model_alpha, loss_fn, img, lh_img, gt, lh_g
     
     loss_pixel = loss_fn(pred, gt)
     loss = args.loss_fea_reconstruct * fea_loss  + args.loss_distinguish * dis_loss + args.loss_fra_reconstruct*loss_pixel
-    # dismap(pred,'pred')
-    # dismap(gt,'gt')
-    # pdb.set_trace()
+
     grads = torch.autograd.grad(loss, model_weights.values(), create_graph=True)
 
-    # pdb.set_trace()
+   
     update_weights = OrderedDict((name, param - torch.mul(meta_alpha,grad)) for 
                                     ((name, param), (_, meta_alpha), grad) in
                                     zip(model_weights.items(), model_alpha.items(), grads))
@@ -245,7 +233,7 @@ def train_init(model, model_weights, model_alpha, loss_fn, img, lh_img, gt, lh_g
 
     lh_loss_pixel = loss_fn(lh_pred, lh_gt)
     lh_loss = args.loss_fea_reconstruct * lh_fea_loss + args.loss_distinguish * lh_dis_loss + args.loss_fra_reconstruct*lh_loss_pixel
-    # pdb.set_trace()
+    
     grads_ = torch.autograd.grad(lh_loss, model_weights.values(), retain_graph=True)
     alpha_grads = torch.autograd.grad(lh_loss, model_alpha.values())
     meta_init_grads = {}
@@ -253,7 +241,6 @@ def train_init(model, model_weights, model_alpha, loss_fn, img, lh_img, gt, lh_g
     count = 0
     for k,_ in model_weights.items():
         meta_init_grads[k] = grads_[count]
-        # meta_init_grads[k] = grads_[count]
         meta_alpha_grads[k] = alpha_grads[count]
         count = count + 1
     return meta_init_grads, meta_alpha_grads, loss, lh_loss, idx
@@ -269,70 +256,51 @@ def test_init(model, model_weights, model_alpha, loss_fn, imgs, gts, args):
             
             loss_pixel = loss_fn(pred, gts[k:k+1]).mean()
             loss = args.loss_fea_reconstruct * fea_loss  + args.loss_distinguish * dis_loss + args.loss_fra_reconstruct*loss_pixel
-            # dismap(pred,'pred')
-            # dismap(gt,'gt')
-            # pdb.set_trace()
             grads = torch.autograd.grad(loss, model_weights.values())
             grad_list.append(grads)
         
-        # k_grads = []#grad_list[0]
-        # for k in range(1,imgs.shape[0]):
-        #     for i in range(len(k_grads)):
-        #         pdb.set_trace()
-        #         k_grads[i] += grad_list[k][i]
         k_grads = ()
         for i in range(len(grad_list[0])):
             grad_temp = grad_list[0][i]
             for k in range(1,len(grad_list)):
                 grad_temp += grad_list[k][i]
             k_grads += (grad_temp/len(grad_list),)
-        # pdb.set_trace()
 
         update_weights = OrderedDict((name, param - torch.mul(meta_alpha,grad)) for 
                                         ((name, param), (_, meta_alpha), grad) in
                                         zip(model_weights.items(), model_alpha.items(), k_grads))
         model_weights = update_weights
-    # pdb.set_trace()
+    
     return update_weights
 
 def test_ft(model, model_weights, model_alpha, loss_fn, img, gt, args):
-    # model.train()
-    # pdb.set_trace()
+    
     update_weights = model_weights
     for j in range(args.test_iter):
         pred, _, _, _, fea_loss, _, dis_loss = model.forward(img, model_weights, True)
         
-        # optimizer.zero_grad()
+        
         loss_pixel = loss_fn(pred, gt).mean()
         loss = args.loss_fea_reconstruct * fea_loss  + args.loss_distinguish * dis_loss + args.loss_fra_reconstruct*loss_pixel
-        # dismap(pred,'pred')
-        # dismap(gt,'gt')
-        # pdb.set_trace()
-        # loss.backward()
-        # optimizer.step()
+
         grads = torch.autograd.grad(loss, model_weights.values())
 
-        # # pdb.set_trace()
+
         update_weights = OrderedDict((name, param - torch.mul(meta_alpha,grad)) for 
                                         ((name, param), (_, meta_alpha), grad) in
                                         zip(model_weights.items(), model_alpha.items(), grads))
-        # pdb.set_trace()
+
         model_weights = update_weights
 
-    # pdb.set_trace()
-    # model.eval()
-    # update_weights = model.get_learnable_params()
-    # pdb.set_trace()
     return update_weights
 
 def dismap(x, name='pred'):
-    # import pdb;pdb.set_trace()
+    
     x = x.data.cpu().numpy()
     x = x.mean(1)
     for j in range(x.shape[0]):
         plt.cla()
         y = x[j]
-        # import pdb;pdb.set_trace()
         df = pd.DataFrame(y)
         sns.heatmap(df)
         plt.savefig('results/dismap/{}_{}.png'.format(name,str(j)))
