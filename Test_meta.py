@@ -34,7 +34,7 @@ import warnings
 import time
 warnings.filterwarnings("ignore") 
 
-parser = argparse.ArgumentParser(description="MNAD")
+parser = argparse.ArgumentParser(description="MPN")
 parser.add_argument('--gpus', nargs='+', type=str, help='gpus')
 parser.add_argument('--batch_size', type=int, default=1, help='batch size for training')
 parser.add_argument('--test_batch_size', type=int, default=1, help='batch size for test')
@@ -43,17 +43,16 @@ parser.add_argument('--w', type=int, default=256, help='width of input images')
 parser.add_argument('--c', type=int, default=3, help='channel of input images')
 parser.add_argument('--t_length', type=int, default=5, help='length of the frame sequences')
 parser.add_argument('--fdim', type=list, default=[512,256,128,64], help='channel dimension of the features')
-parser.add_argument('--mdim', type=list, default=[512,256,128,64], help='channel dimension of the memory items')
-
+parser.add_argument('--pdim', type=list, default=[512,256,128,64], help='channel dimension of the prototypes')
+parser.add_argument('--psize', type=int, default=10, help='number of the prototypes')
 parser.add_argument('--test_iter', type=int, default=1, help='channel of input images')
 parser.add_argument('--K_hots', type=int, default=0, help='number of the K hots')
 parser.add_argument('--alpha', type=float, default=0.7, help='weight for the anomality score')
 parser.add_argument('--th', type=float, default=0.01, help='threshold for test updating')
 parser.add_argument('--num_workers_test', type=int, default=8, help='number of workers for the test loader')
 parser.add_argument('--dataset_type', type=str, default='ped2', help='type of dataset: ped2, avenue, shanghai')
-parser.add_argument('--dataset_path', type=str, default='./dataset/', help='directory of data')
+parser.add_argument('--dataset_path', type=str, default='data/', help='directory of data')
 parser.add_argument('--model_dir', type=str, help='directory of model')
-parser.add_argument('--m_items_dir', type=str, help='directory of model')
 
 args = parser.parse_args()
 
@@ -86,7 +85,7 @@ test_batch = data.DataLoader(test_dataset, batch_size = args.test_batch_size,
 loss_func_mse = nn.MSELoss(reduction='none')
 
 
-model = convAE(args.c, args.t_length, args.msize, args.fdim, args.mdim)
+model = convAE(args.c, args.t_length, args.psize, args.fdim, args.pdim)
 model.cuda()
 
 dataset_type = args.dataset_type if args.dataset_type != 'SHTech' else 'shanghai'
@@ -224,7 +223,7 @@ if os.path.isdir(snapshot_dir):
                         start_t = time.time()
                         pred, mask, _, hidden_state = model.forward(imgs[:,:3*4], hidden_state, update_weights, False)
                         end_t = time.time()
-                        pdb.set_trace()
+                        
                         if k>=len(test_batch)//2:
                             forward_time.update(end_t-start_t, 1)
                         outputs = torch.cat(pred,1)
@@ -239,7 +238,7 @@ if os.path.isdir(snapshot_dir):
                         mse_feas = mse_feas.view((mse_feas.shape[0],-1))
                         mse_feas = mse_feas.mean(-1)
                         vid = video_num
-                        vdd = video_num if args.dataset_type != 'avenu' else 0
+                        vdd = video_num if args.dataset_type != 'avenue' else 0
                         for j in range(len(mse_imgs)):
                             psnr_score = psnr(mse_imgs[j].item())
                             fea_score = mse_feas[j].item()
@@ -274,7 +273,7 @@ if os.path.isdir(snapshot_dir):
                 anomaly_score_mem_list += anomaly_score_list(feature_distance_list[video_name])
                 anomaly_score_total_list += score_sum(anomaly_score_list(psnr_list[video_name]), 
                                                  anomaly_score_list(feature_distance_list[video_name]), args.alpha)
-            #     draw_score_curve(aa, bb, cc, videos[video_name]['labels'], name='results/curves_meta', vid=args.dataset_type+'_'+video_name)
+            
             anomaly_score_total = np.asarray(anomaly_score_total_list)
             accuracy_total = 100*AUC(anomaly_score_total, np.expand_dims(1-labels_list, 0))
             anomaly_score_ae = np.asarray(anomaly_score_ae_list)
