@@ -1,12 +1,19 @@
 # Codes_MPN
 Official codes of CVPR21 paper: Learning Normal Dynamics in Videos with Meta Prototype Network (https://arxiv.org/abs/2104.06689)
 
-# Paper Results on Unsupervised VAD
+# MPN Framework
+![image](./DPU.png)
+![image](./MetaLearningPhase.png)
 
+# Paper Results on Unsupervised VAD
+![image](./UnsupervisedVAD.png)
 # Paper Results on Few-shot VAD
+![image](./Few-shotVAD.png)
+
 
 # Preparation 
 Please download the corresponding benchmarks in 'data' directory. Then prepare the environment as in requirement.txt.
+
 
 # Unsupervised Anomaly Detection Model Training
 Run 'python Train.py' to train a model with DPU model.
