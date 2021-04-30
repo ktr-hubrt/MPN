@@ -22,7 +22,7 @@ Run 'python Train.py' to train a model with DPU model.
 Run 'python Train_meta.py' to train a model with MPU model.
 
 # Meta-learning Anomaly Detection Model Testing
-Run 'python Test_meta.py' to train a model with MPU model.
+Run 'python Test_meta.py' to test a model with MPU model.
 
 If you find this work helpful, please cite:
 ```
