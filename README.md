@@ -3,6 +3,7 @@ Official codes of CVPR21 paper: Learning Normal Dynamics in Videos with Meta Pro
 
 # MPN Framework
 ![image](./DPU.png)
+
 ![image](./MetaLearningPhase.png)
 
 # Paper Results on Unsupervised VAD
