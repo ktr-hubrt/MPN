@@ -1,5 +1,9 @@
 # Codes_MPN
-Official codes of CVPR21 paper: Learning Normal Dynamics in Videos with Meta Prototype Network
+Official codes of CVPR21 paper: Learning Normal Dynamics in Videos with Meta Prototype Network (https://arxiv.org/abs/2104.06689)
+
+# Paper Results on Unsupervised VAD
+
+# Paper Results on Few-shot VAD
 
 # Preparation 
 Please download the corresponding benchmarks in 'data' directory. Then prepare the environment as in requirement.txt.
