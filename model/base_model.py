@@ -169,7 +169,7 @@ class convAE(torch.nn.Module):
         
         #test
         else:
-            updated_fea, keys, softmax_score_query, softmax_score_memory, query, fea_loss = self.prototype(new_fea, new_fea, weights, train)
+            updated_fea, keys, query, fea_loss = self.prototype(new_fea, new_fea, weights, train)
             if weights == None:
                 output = self.ohead(updated_fea)
             else:
@@ -180,7 +180,7 @@ class convAE(torch.nn.Module):
                 x = conv2d(x, weights['ohead.4.weight'], weights['ohead.4.bias'], stride=1, padding=1)
                 output = F.tanh(x)
             
-            return output, fea, updated_fea, keys, softmax_score_query, softmax_score_memory, query, fea_loss
+            return output, fea, updated_fea, keys, query, fea_loss
         
 def meta_update(model, model_weights, meta_init_grads, model_alpha, meta_alpha_grads, 
                 meta_init_optimizer, meta_alpha_optimizer):
