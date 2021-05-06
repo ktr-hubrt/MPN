@@ -81,7 +81,7 @@ class Meta_Prototype(nn.Module):
                 multi_heads_weights = linear(key, weights['prototype.Mheads.weight'])
 
 
-            multi_heads_weights = multi_heads_weights.view((batch_size, h*w, self.memory_size, 1))
+            multi_heads_weights = multi_heads_weights.view((batch_size, h*w, self.proto_size, 1))
 
             # softmax on weights
             multi_heads_weights = F.softmax(multi_heads_weights,dim=1)
@@ -107,7 +107,7 @@ class Meta_Prototype(nn.Module):
             else:
                 multi_heads_weights = linear(key, weights['prototype.Mheads.weight'])
                 
-            multi_heads_weights = multi_heads_weights.view((batch_size, h*w, self.memory_size, 1))
+            multi_heads_weights = multi_heads_weights.view((batch_size, h*w, self.proto_size, 1))
 
             # softmax on weights
             multi_heads_weights = F.softmax(multi_heads_weights,dim=1)
@@ -117,14 +117,14 @@ class Meta_Prototype(nn.Module):
             protos = protos.sum(1)
 
             # loss
-            updated_query, fea_loss, query, softmax_score_query, softmax_score_proto = self.query_loss(query, protos, weights, train)
+            updated_query, fea_loss, query = self.query_loss(query, protos, weights, train)
 
             # skip connection
             updated_query = updated_query+query
             # reshape
             updated_query = updated_query.permute(0,2,1) # b X d X n
             updated_query = updated_query.view((batch_size, self.feature_dim, h_, w_))
-            return updated_query, protos, softmax_score_query, softmax_score_memory, query, fea_loss
+            return updated_query, protos, query, fea_loss
         
     def query_loss(self, query, keys, weights, train):
         batch_size, n, dims = query.size() # b X n X d, n=w*h
@@ -155,7 +155,7 @@ class Meta_Prototype(nn.Module):
             new_query = F.normalize(new_query, dim=-1)
 
             # maintain the distinction among attribute vectors
-            _, gathering_indices = torch.topk(softmax_score_memory, 2, dim=-1)
+            _, gathering_indices = torch.topk(softmax_score_proto, 2, dim=-1)
         
             # 1st closest memories
             pos = torch.gather(keys,1,gathering_indices[:,:,:1].repeat((1,1,dims)))
@@ -175,13 +175,13 @@ class Meta_Prototype(nn.Module):
             new_query = new_query.sum(2)
             new_query = F.normalize(new_query, dim=-1)
 
-            _, gathering_indices = torch.topk(softmax_score_memory, 2, dim=-1)
+            _, gathering_indices = torch.topk(softmax_score_proto, 2, dim=-1)
         
             #1st closest memories
             pos = torch.gather(keys,1,gathering_indices[:,:,:1].repeat((1,1,dims)))
 
             fea_loss = loss_mse(query, pos)
 
-            return new_query, fea_loss, query, softmax_score_query, softmax_score_memory
+            return new_query, fea_loss, query
     
     
