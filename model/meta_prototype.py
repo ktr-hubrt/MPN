@@ -27,6 +27,9 @@ def mean_distance(a, b, weight=None, training=True):
     else:
         return dis.mean().unsqueeze(0)
 
+def distance(a, b):
+    return ((a - b) ** 2).sum(-1)
+    
 def heatmap(x, name='heatmap'):
     # import pdb;pdb.set_trace()
     x = x.squeeze(-1)
