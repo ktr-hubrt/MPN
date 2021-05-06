@@ -144,12 +144,9 @@ class convAE(torch.nn.Module):
         return params
 
     def forward(self, x, weights=None, train=True):
-        if weights == None:
-            fea, skip1, skip2, skip3 = self.encoder(x)
-            new_fea = self.decoder(fea, skip1, skip2, skip3)
-        else:
-            fea, skip1, skip2, skip3 = self.encoder_w(x, weights)
-            new_fea = self.decoder_w(fea, skip1, skip2, skip3, weights)
+        
+        fea, skip1, skip2, skip3 = self.encoder(x)
+        new_fea = self.decoder(fea, skip1, skip2, skip3)
 
         new_fea = F.normalize(new_fea, dim=1)
         
