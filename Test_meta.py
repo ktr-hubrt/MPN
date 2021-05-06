@@ -266,28 +266,18 @@ if os.path.isdir(snapshot_dir):
             # Measuring the abnormality score and the AUC
             for video in sorted(videos_list):
                 video_name = video.split('/')[-1]
-                aa = anomaly_score_list(psnr_list[video_name])
-                bb = anomaly_score_list(feature_distance_list[video_name])
-                cc = score_sum(anomaly_score_list(psnr_list[video_name]), anomaly_score_list(feature_distance_list[video_name]), args.alpha)
-                anomaly_score_ae_list += anomaly_score_list(psnr_list[video_name])
-                anomaly_score_mem_list += anomaly_score_list(feature_distance_list[video_name])
                 anomaly_score_total_list += score_sum(anomaly_score_list(psnr_list[video_name]), 
                                                  anomaly_score_list(feature_distance_list[video_name]), args.alpha)
             
             anomaly_score_total = np.asarray(anomaly_score_total_list)
             accuracy_total = 100*AUC(anomaly_score_total, np.expand_dims(1-labels_list, 0))
-            anomaly_score_ae = np.asarray(anomaly_score_ae_list)
-            accuracy_ae = 100*AUC(anomaly_score_ae, np.expand_dims(1-labels_list, 0))
-            anomaly_score_mem = np.asarray(anomaly_score_mem_list)
-            accuracy_mem = 100*AUC(anomaly_score_mem, np.expand_dims(1-labels_list, 0))
 
             print('The result of Version {0} Epoch {1} on {2}'.format(psnr_dir.split('/')[-1], ckpt_name.split('_')[-1], args.dataset_type))
-            print('Total AUC (frame, fea): {:.4f}({:.4f},{:.4f})%'.format(accuracy_total,accuracy_ae,accuracy_mem))
+            print('Total AUC (frame, fea): {:.4f}%'.format(accuracy_total))
             output_file = psnr_dir+'/'+ckpt_name+'.npz'
-            np.savez(output_file, psnr=psnr_list, feaRe=feature_distance_list, total=accuracy_total, fra=accuracy_ae, fea=accuracy_mem )
+            np.savez(output_file, psnr=psnr_list, feaRe=feature_distance_list, total=accuracy_total)
 
             tested_ckpt_sets.add(ckpt_name)
-
             
 
         loss_file_list = os.listdir(psnr_dir)
@@ -297,8 +287,6 @@ if os.path.isdir(snapshot_dir):
             return int(s.split('.npz')[0].split('_')[-1])
 
         best_auc = 0.0
-        best_auc_ae = 0.0
-        best_auc_mem = 0.0
         best_id = 0
         
         # clear list
@@ -315,8 +303,6 @@ if os.path.isdir(snapshot_dir):
             file = np.load(ret_file, 'r', allow_pickle=True)
             psnr_list = file['psnr'].item()
             feature_distance_list = file['feaRe'].item()
-            accuracy_ae = file['fra']
-            accuracy_mem = file['fea']
             anomaly_score_total_list = []
             if args.dataset_type =='avenueasd':
                 ae = []
@@ -340,11 +326,9 @@ if os.path.isdir(snapshot_dir):
             if accuracy>best_auc:
                 best_id = version
                 best_auc = accuracy
-                best_auc_ae = accuracy_ae
-                best_auc_mem = accuracy_mem
 
-            print('The auc of Version {} {} on {}: {:.4f}({:.4f},{:.4f})'.format(psnr_dir.split('/')[-1], version, args.dataset_type, accuracy, accuracy_ae, accuracy_mem))
-        print('Best auc of Version {} is Epoch {} on {}: {:.4f}({:.4f},{:.4f})'.format(psnr_dir.split('/')[-1], best_id, args.dataset_type, best_auc, best_auc_ae, best_auc_mem))
+            print('The auc of Version {} {} on {}: {:.4f}'.format(psnr_dir.split('/')[-1], version, args.dataset_type, accuracy))
+        print('Best auc of Version {} is Epoch {} on {}: {:.4f}'.format(psnr_dir.split('/')[-1], best_id, args.dataset_type, best_auc))
 
         time.sleep(60)
 
