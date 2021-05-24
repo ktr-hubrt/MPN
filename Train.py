@@ -141,7 +141,6 @@ for epoch in range(start_epoch, args.epochs):
         optimizer_D.zero_grad()
         loss_pixel = torch.mean(loss_func_mse(outputs, imgs[:,12:]))
         fea_loss = fea_loss.mean()
-        cst_loss = cst_loss.mean()
         dis_loss = dis_loss.mean()
         loss_D = args.loss_fra_reconstruct*loss_pixel + args.loss_fea_reconstruct * fea_loss + args.loss_distinguish * dis_loss 
         loss_D.backward(retain_graph=True)
