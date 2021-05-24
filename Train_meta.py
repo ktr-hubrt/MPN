@@ -107,7 +107,7 @@ if ckpt != '':
   saved_state_dict = torch.load(ckpt)['state_dict'].state_dict()
   model.load_state_dict(saved_state_dict, strict=True)
 
-model.set_learnable_params(['memory','ohead'])
+model.set_learnable_params(['prototype','ohead'])
 
 
 ## Initialize Meta Params(learning rate) Net##
