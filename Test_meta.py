@@ -221,17 +221,15 @@ if os.path.isdir(snapshot_dir):
                             
                             update_weights = test_init(model, meta_init, meta_alpha, loss_func_mse, imgs_k[:,:3*4], imgs_k[:,3*4:3*5], args)
                         start_t = time.time()
-                        pred, mask, _, hidden_state = model.forward(imgs[:,:3*4], hidden_state, update_weights, False)
+                        outputs, fea_loss = model.forward(imgs[:,:3*4], update_weights, False)
                         end_t = time.time()
                         
                         if k>=len(test_batch)//2:
                             forward_time.update(end_t-start_t, 1)
                         outputs = torch.cat(pred,1)
                         mse_imgs = loss_func_mse((outputs[:]+1)/2, (imgs[:,3*2:]+1)/2)
-                        mask_maxs, gathering_indices = torch.topk(mask, 2, dim=1)
-                        mse_feas = 1 - mask_maxs[:,0] + mask_maxs[:,1]
-                        mse_feas = mse_feas.mean(-1).mean(-1)
-                        
+                        mse_feas = fea_loss.mean(-1)
+            
                         mse_feas = mse_feas.reshape((-1,1,256,256))
                         mse_imgs = mse_imgs.view((mse_imgs.shape[0],-1))
                         mse_imgs = mse_imgs.mean(-1)
