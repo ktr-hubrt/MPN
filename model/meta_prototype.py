@@ -135,7 +135,6 @@ class Meta_Prototype(nn.Module):
             
             # Distinction constrain
             keys_ = F.normalize(keys, dim=-1)
-            similarity = torch.bmm(keys_, keys_.permute(0,2,1))
             dis = 1-distance(keys_.unsqueeze(1), keys_.unsqueeze(2))
             
             mask = dis>0
