@@ -19,6 +19,29 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+def filter(data, template, radius=5):
+    arr=np.array(data)
+    length=arr.shape[0]  
+    newData=np.zeros(length) 
+
+    for j in range(radius//2,arr.shape[0]-radius//2):
+        t=arr[ j-radius//2:j+radius//2+1]
+        a=np.multiply(t,template)
+        newData[j]=a.sum()
+    # expand
+    for i in range(radius//2):
+        newData[i]=newData[radius//2]
+    for i in range(-radius//2,0):
+        newData[i]=newData[-radius//2]    
+    # import pdb;pdb.set_trace()
+    return newData
+
+def calc(r=5, sigma=2):
+    k = np.zeros(r)
+    for i in range(r):
+        k[i] = 1/((2*math.pi)**0.5*sigma)*math.exp(-((i-r//2)**2/2/(sigma**2)))
+    return k
+
 def rmse(predictions, targets):
     return np.sqrt(((predictions - targets) ** 2).mean())
 
