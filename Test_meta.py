@@ -42,8 +42,8 @@ parser.add_argument('--h', type=int, default=256, help='height of input images')
 parser.add_argument('--w', type=int, default=256, help='width of input images')
 parser.add_argument('--c', type=int, default=3, help='channel of input images')
 parser.add_argument('--t_length', type=int, default=5, help='length of the frame sequences')
-parser.add_argument('--fdim', type=list, default=[512,256,128,64], help='channel dimension of the features')
-parser.add_argument('--pdim', type=list, default=[512,256,128,64], help='channel dimension of the prototypes')
+parser.add_argument('--fdim', type=list, default=[128], help='channel dimension of the features')
+parser.add_argument('--pdim', type=list, default=[128], help='channel dimension of the prototypes')
 parser.add_argument('--psize', type=int, default=10, help='number of the prototypes')
 parser.add_argument('--test_iter', type=int, default=1, help='channel of input images')
 parser.add_argument('--K_hots', type=int, default=0, help='number of the K hots')
@@ -85,7 +85,7 @@ test_batch = data.DataLoader(test_dataset, batch_size = args.test_batch_size,
 loss_func_mse = nn.MSELoss(reduction='none')
 
 
-model = convAE(args.c, args.t_length, args.psize, args.fdim, args.pdim)
+model = convAE(args.c, args.t_length, args.psize, args.fdim[0], args.pdim[0])
 model.cuda()
 
 dataset_type = args.dataset_type if args.dataset_type != 'SHTech' else 'shanghai'
