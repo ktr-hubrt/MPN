@@ -38,6 +38,9 @@ parser = argparse.ArgumentParser(description="MPN")
 parser.add_argument('--gpus', nargs='+', type=str, help='gpus')
 parser.add_argument('--batch_size', type=int, default=1, help='batch size for training')
 parser.add_argument('--test_batch_size', type=int, default=1, help='batch size for test')
+parser.add_argument('--loss_fra_reconstruct', type=float, default=1.00, help='weight of the frame reconstruction loss')
+parser.add_argument('--loss_fea_reconstruct', type=float, default=0.1, help='weight of the feature reconstruction loss')
+parser.add_argument('--loss_distinguish', type=float, default=0.1, help='weight of the feature distinction loss')
 parser.add_argument('--h', type=int, default=256, help='height of input images')
 parser.add_argument('--w', type=int, default=256, help='width of input images')
 parser.add_argument('--c', type=int, default=3, help='channel of input images')
@@ -195,77 +198,95 @@ if os.path.isdir(snapshot_dir):
                 feature_distance_list[video_name].clear()
             pbar = tqdm(total=len(test_batch),
                         bar_format='{l_bar}|{bar}| {n_fmt}/{total_fmt} [{rate_fmt}{postfix}|{elapsed}<{remaining}]',)
-            with torch.no_grad():
-                for k,(imgs) in enumerate(test_batch):
-                    hidden_state = None
-                    imgs = Variable(imgs).cuda()
-                    if args.K_hots ==0:
-                        update_weights = meta_init
-                    if k_iter<args.K_hots:
-                        
-                        imgs_k.append(imgs)
-                        k_iter += imgs.shape[0]
-                        pbar.set_postfix({
-                                    'Epoch': '{0}'.format(ckpt_name.split('_')[-1]),
-                                    'Vid': '{0}'.format(args.dataset_type+'_'+videos_list[video_num].split('/')[-1]),
-                                    'AEScore': '{:.6f}'.format(0),
-                                    'MEScore': '{:.6f}'.format(0),
-                                    })
-                        pbar.update(1)
-                    else:
-                        if update_weights is None:
-                            if len(imgs_k) == 0:
-                                imgs_k = imgs
-                            else:
-                                imgs_k = torch.cat(imgs_k,0)
-                            
-                            update_weights = test_init(model, meta_init, meta_alpha, loss_func_mse, imgs_k[:,:3*4], imgs_k[:,3*4:3*5], args)
-                        start_t = time.time()
-                        outputs, fea_loss = model.forward(imgs[:,:3*4], update_weights, False)
-                        end_t = time.time()
-                        
-                        if k>=len(test_batch)//2:
-                            forward_time.update(end_t-start_t, 1)
-                        outputs = torch.cat(pred,1)
-                        mse_imgs = loss_func_mse((outputs[:]+1)/2, (imgs[:,3*2:]+1)/2)
-                        mse_feas = fea_loss.mean(-1)
             
-                        mse_feas = mse_feas.reshape((-1,1,256,256))
-                        mse_imgs = mse_imgs.view((mse_imgs.shape[0],-1))
-                        mse_imgs = mse_imgs.mean(-1)
-                        mse_feas = mse_feas.view((mse_feas.shape[0],-1))
-                        mse_feas = mse_feas.mean(-1)
-                        vid = video_num
-                        vdd = video_num if args.dataset_type != 'avenue' else 0
-                        for j in range(len(mse_imgs)):
-                            psnr_score = psnr(mse_imgs[j].item())
-                            fea_score = mse_feas[j].item()
-                            psnr_list[videos_list[vdd].split('/')[-1]].append(psnr_score)
-                            feature_distance_list[videos_list[vdd].split('/')[-1]].append(fea_score)
-                            k_iter += 1
-                            if k_iter == videos[videos_list[video_num].split('/')[-1]]['length']-args.t_length+1:
-                                video_num += 1
-                                update_weights = None
-                                k_iter = 0
-                                imgs_k = []
-                                hidden_state = None
-                            
-                        pbar.set_postfix({
-                                        'Epoch': '{0}'.format(ckpt_name.split('_')[-1]),
-                                        'Vid': '{0}'.format(args.dataset_type+'_'+videos_list[vid].split('/')[-1]),
-                                        'AEScore': '{:.6f}'.format(psnr_score),
-                                        'MEScore': '{:.6f}'.format(fea_score),
-                                        'time': '{:.6f}({:.6f})'.format(end_t-start_t,forward_time.avg),
-                                        })
-                        pbar.update(1)
+            for k,(imgs) in enumerate(test_batch):
+                hidden_state = None
+                imgs = Variable(imgs).cuda()
+                if args.K_hots ==0:
+                    update_weights = meta_init
+                if k_iter<args.K_hots:
+
+                    imgs_k.append(imgs)
+                    k_iter += imgs.shape[0]
+                    pbar.set_postfix({
+                                'Epoch': '{0}'.format(ckpt_name.split('_')[-1]),
+                                'Vid': '{0}'.format(args.dataset_type+'_'+videos_list[video_num].split('/')[-1]),
+                                'AEScore': '{:.6f}'.format(0),
+                                'MEScore': '{:.6f}'.format(0),
+                                })
+                    pbar.update(1)
+                else:
+                    if update_weights is None:
+                        if len(imgs_k) == 0:
+                            imgs_k = imgs
+                        else:
+                            imgs_k = torch.cat(imgs_k,0)
+
+                        update_weights = test_init(model, meta_init, meta_alpha, loss_func_mse, imgs_k[:,:3*4], imgs_k[:,3*4:3*5], args)
+                    start_t = time.time()
+                    outputs, fea_loss = model.forward(imgs[:,:3*4], update_weights, False)
+                    end_t = time.time()
+
+                    if k>=len(test_batch)//2:
+                        forward_time.update(end_t-start_t, 1)
+                    outputs = torch.cat(pred,1)
+                    mse_imgs = loss_func_mse((outputs[:]+1)/2, (imgs[:,3*2:]+1)/2)
+                    mse_feas = fea_loss.mean(-1)
+
+                    mse_feas = mse_feas.reshape((-1,1,256,256))
+                    mse_imgs = mse_imgs.view((mse_imgs.shape[0],-1))
+                    mse_imgs = mse_imgs.mean(-1)
+                    mse_feas = mse_feas.view((mse_feas.shape[0],-1))
+                    mse_feas = mse_feas.mean(-1)
+                    vid = video_num
+                    vdd = video_num if args.dataset_type != 'avenue' else 0
+                    for j in range(len(mse_imgs)):
+                        psnr_score = psnr(mse_imgs[j].item())
+                        fea_score = mse_feas[j].item()
+                        psnr_list[videos_list[vdd].split('/')[-1]].append(psnr_score)
+                        feature_distance_list[videos_list[vdd].split('/')[-1]].append(fea_score)
+                        k_iter += 1
+                        if k_iter == videos[videos_list[video_num].split('/')[-1]]['length']-args.t_length+1:
+                            video_num += 1
+                            update_weights = None
+                            k_iter = 0
+                            imgs_k = []
+                            hidden_state = None
+
+                    pbar.set_postfix({
+                                    'Epoch': '{0}'.format(ckpt_name.split('_')[-1]),
+                                    'Vid': '{0}'.format(args.dataset_type+'_'+videos_list[vid].split('/')[-1]),
+                                    'AEScore': '{:.6f}'.format(psnr_score),
+                                    'MEScore': '{:.6f}'.format(fea_score),
+                                    'time': '{:.6f}({:.6f})'.format(end_t-start_t,forward_time.avg),
+                                    })
+                    pbar.update(1)
 
             pbar.close()
             forward_time.reset()
             # Measuring the abnormality score and the AUC
-            for video in sorted(videos_list):
-                video_name = video.split('/')[-1]
-                anomaly_score_total_list += score_sum(anomaly_score_list(psnr_list[video_name]), 
-                                                 anomaly_score_list(feature_distance_list[video_name]), args.alpha)
+            if args.dataset_type not in ['avenue']:
+                for video in sorted(videos_list):
+                    video_name = video.split('/')[-1]
+                    template = calc(15, 2)
+                    aa = filter(anomaly_score_list(psnr_list[video_name]), template, 15)
+                    bb = filter(anomaly_score_list(feature_distance_list[video_name]), template, 15)
+                    anomaly_score_total_list += score_sum(aa, bb, args.alpha)
+            else:
+                plist = []
+                flist = []
+                for video in sorted(videos_list):
+                    video_name = video.split('/')[-1]
+                    template = calc(15, 2)
+
+                    aa = filter(anomaly_score_list(psnr_list[video_name]), template, 15)
+                    bb = filter(anomaly_score_list(feature_distance_list[video_name]), template, 15)
+                    plist += aa.tolist()
+                    flist += bb.tolist()
+
+                anomaly_score_total_list += score_sum(anomaly_score_list(plist), 
+                                                        anomaly_score_list(flist), 
+                                                        args.alpha)
             
             anomaly_score_total = np.asarray(anomaly_score_total_list)
             accuracy_total = 100*AUC(anomaly_score_total, np.expand_dims(1-labels_list, 0))
@@ -302,21 +323,23 @@ if os.path.isdir(snapshot_dir):
             psnr_list = file['psnr'].item()
             feature_distance_list = file['feaRe'].item()
             anomaly_score_total_list = []
-            if args.dataset_type =='avenueasd':
+           if args.dataset_type =='avenue':
                 ae = []
                 me = []
                 for video in sorted(videos_list):
                     video_name = video.split('/')[-1]
-                    ae += psnr_list[video_name]
-                    me += feature_distance_list[video_name]
+                    template = calc(15, 2)
+                    ae += filter(anomaly_score_list(psnr_list[video_name]), template, 15)
+                    me += filter(anomaly_score_list(feature_distance_list[video_name]), template, 15)
                 anomaly_score_total_list = score_sum(anomaly_score_list(ae), anomaly_score_list(me), args.alpha)
             else:
                 
                 for video in sorted(videos_list):
                     video_name = video.split('/')[-1]
-                    
-                    anomaly_score_total_list += score_sum(anomaly_score_list(psnr_list[video_name]), 
-                                                     anomaly_score_list(feature_distance_list[video_name]), args.alpha)
+                    template = calc(15, 2)
+                    aa = filter(anomaly_score_list(psnr_list[video_name]), template, 15)
+                    bb = filter(anomaly_score_list(feature_distance_list[video_name]), template, 15)
+                    anomaly_score_total_list += score_sum(aa, bb, args.alpha)
             anomaly_score_total = np.asarray(anomaly_score_total_list)
 
             accuracy = AUC(anomaly_score_total, np.expand_dims(1-labels_list, 0))
