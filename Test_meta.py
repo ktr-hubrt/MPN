@@ -229,7 +229,6 @@ if os.path.isdir(snapshot_dir):
 
                     if k>=len(test_batch)//2:
                         forward_time.update(end_t-start_t, 1)
-                    outputs = torch.cat(pred,1)
                     mse_imgs = loss_func_mse((outputs[:]+1)/2, (imgs[:,3*2:]+1)/2)
                     mse_feas = fea_loss.mean(-1)
 
