@@ -14,7 +14,7 @@ Official codes of CVPR21 paper: Learning Normal Dynamics in Videos with Meta Pro
 
 # Preparation 
 Please download the corresponding benchmarks in 'data' directory. Then prepare the environment as in requirement.txt. 
-We have uploaded several trained models on Baidunetdisk(link：https://pan.baidu.com/s/1qcGmdmZlmAgqsAzw_i5BhA code：mapz).
+We have uploaded several trained models on online (Baidunetdisk(link：https://pan.baidu.com/s/1qcGmdmZlmAgqsAzw_i5BhA code：mapz) or Drive (https://drive.google.com/drive/folders/1ketomxctszHo7jpGQS3RxbZGq7e_M3e4?usp=sharing)).
 
 
 # Unsupervised Anomaly Detection Model Training
