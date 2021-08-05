@@ -72,9 +72,9 @@ torch.backends.cudnn.enabled = True # make sure to use cudnn for computational p
 train_folder = args.dataset_path+args.dataset_type+"/training/frames"
 
 # Loading dataset
-train_dataset = DataLoader(train_folder, transforms.Compose([
-             transforms.ToTensor(),          
-             ]), resize_height=args.h, resize_width=args.w, time_step=args.t_length-1)
+train_dataset = VideoDataLoader(train_folder, args.dataset_type, transforms.Compose([
+             transforms.ToTensor(),           
+             ]), resize_height=args.h, resize_width=args.w, time_step=args.t_length-1, segs=args.segs, batch_size=args.batch_size)
 
 
 train_size = len(train_dataset)
