@@ -79,7 +79,7 @@ train_dataset = VideoDataLoader(train_folder, args.dataset_type, transforms.Comp
 
 train_size = len(train_dataset)
 
-train_batch = data.DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers, drop_last=True)
+train_batch = data.DataLoader(train_dataset, batch_size=1, shuffle=True, num_workers=args.num_workers, drop_last=True)
 
 
 # Model setting
