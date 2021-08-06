@@ -153,6 +153,8 @@ class VideoDataLoader(data.Dataset):
                     batch.append(self.transform(image))
         return np.concatenate(batch, axis=0)
     
+    def __len__(self):
+        return len(self.video_names)
 class MetaDataLoader(data.Dataset):
     def __init__(self, video_folder, transform, resize_height, resize_width, time_step=4, task_size=2, segs=32, num_pred=1):
         if "UCF" in video_folder:
