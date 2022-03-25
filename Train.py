@@ -22,6 +22,7 @@ from collections import OrderedDict
 import copy
 import time
 from model.utils import DataLoader
+from model.utils import VideoDataLoader
 from model.base_model import *
 from sklearn.metrics import roc_auc_score
 from utils import *
