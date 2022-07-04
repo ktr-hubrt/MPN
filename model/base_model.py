@@ -181,33 +181,7 @@ class convAE(torch.nn.Module):
         
 def meta_update(model, model_weights, meta_init_grads, model_alpha, meta_alpha_grads, 
                 meta_init_optimizer, meta_alpha_optimizer):
-    # Unpack the list of grad dicts
-    # init_gradients = {k: sum(d[k] for d in meta_init_grads) for k in meta_init_grads[0].keys()}
-    init_gradients = {k: (sum(d[k] for d in meta_init_grads) / len(meta_init_grads)) for k in meta_init_grads[0].keys()}
-    # alpha_gradients = {k: sum(d[k] for d in meta_alpha_grads) for k in meta_alpha_grads[0].keys()}
-    alpha_gradients = {k: (sum(d[k] for d in meta_alpha_grads) / len(meta_init_grads)) for k in meta_alpha_grads[0].keys()}
-    
-    # dummy variable to mimic forward and backward
-    dummy_x = Variable(torch.Tensor(np.random.randn(1)), requires_grad=False).cuda()
-    
-    # update meta_init(for initial weights)
-    for k,init in model_weights.items():
-        dummy_x = torch.sum(dummy_x*init)
-    meta_init_optimizer.zero_grad()
-    dummy_x.backward()
-    for k,init in model_weights.items():
-        init.grad = init_gradients[k]
-    meta_init_optimizer.step()
-
-    # update meta_alpha(for learning rate)
-    dummy_y = Variable(torch.Tensor(np.random.randn(1)), requires_grad=False).cuda()
-    for k,alpha in model_alpha.items():
-        dummy_y = torch.sum(dummy_y*alpha)
-    meta_alpha_optimizer.zero_grad()
-    dummy_y.backward()
-    for k,alpha in model_alpha.items():
-        alpha.grad = alpha_gradients[k]
-    meta_alpha_optimizer.step()
+    ## To be modified
 
 def train_init(model, model_weights, model_alpha, loss_fn, img, lh_img, gt, lh_gt, idx, args):
     
