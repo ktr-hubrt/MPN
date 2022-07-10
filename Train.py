@@ -22,6 +22,7 @@ from collections import OrderedDict
 import copy
 import time
 from model.utils import DataLoader
+from model.utils import VideoDataLoader
 from model.base_model import *
 from sklearn.metrics import roc_auc_score
 from utils import *
@@ -52,7 +53,7 @@ parser.add_argument('--alpha', type=float, default=0.6, help='weight for the ano
 parser.add_argument('--num_workers', type=int, default=8, help='number of workers for the train loader')
 parser.add_argument('--num_workers_test', type=int, default=8, help='number of workers for the test loader')
 parser.add_argument('--dataset_type', type=str, default='ped2', help='type of dataset: ped2, avenue, shanghai')
-parser.add_argument('--dataset_path', type=str, default='.data/', help='directory of data')
+parser.add_argument('--dataset_path', type=str, default='data/', help='directory of data')
 parser.add_argument('--exp_dir', type=str, default='log', help='directory of log')
 parser.add_argument('--resume', type=str, default='exp/ped2/example.pth', help='file path of resume pth')
 parser.add_argument('--debug', type=bool, default=False, help='if debug')
